@@ -44,6 +44,8 @@ void MainWindow::pressKey(const QString &id){
     }
     if(id==QLatin1String("btnAdd")){
         setOperator(QStringLiteral("+"));
+        m_current+="+";
+        updateDisplay();
         return;
     }
     if(id==QLatin1String("btnSub")){
@@ -62,11 +64,34 @@ void MainWindow::pressKey(const QString &id){
         evaluate();
         return;
     }
+    if(id==QLatin1String("btnSign")){
+        toggleSign();
+        return;
+    }
+}
+
+//运算框显示
+QString MainWindow::displayText() const{
+    return m_current.isEmpty()?QStringLiteral("0"):m_current;
 }
 
 //刷新显示
 void MainWindow::updateDisplay(){
-    ui->lineEditDisplay->setText(m_current.isEmpty()?QStringLiteral("0"):m_current);
+    ui->lineEditDisplay->setText(displayText());
+    ui->labelExpression->setText(m_expr);
+}
+
+//内部运算符
+QString MainWindow::symbolOf(const QString &op) const{
+    if(op==QLatin1String("+"))
+        return QStringLiteral("+");
+    if(op==QLatin1String("-"))
+        return QStringLiteral("-");
+    if(op==QLatin1String("*"))
+        return QStringLiteral("×");
+    if(op==QLatin1String("/"))
+        return QStringLiteral("÷");
+    return op;
 }
 
 //读取当前值
@@ -89,12 +114,18 @@ void MainWindow::inputDigit(const QString &digit){
     if(m_error){
         clearAll();
     }
+    if(m_op.isEmpty()&&m_startNew){
+        m_expr.clear();
+    }
     if(m_startNew){
         m_current.clear();
         m_startNew=false;
     }
-    if(m_current==QLatin1String("0"))
+    if(m_current==QLatin1String("0")){
         m_current.clear();
+    }else if(m_current==QLatin1String("-0")){
+        m_current=QStringLiteral("-");
+    }
     if(m_current.size()>=KMaxDigits)
         return;
 
@@ -106,6 +137,9 @@ void MainWindow::inputDigit(const QString &digit){
 void MainWindow::inputDot(){
     if(m_error){
         clearAll();
+    }
+    if(m_op.isEmpty()&&m_startNew){
+        m_expr.clear();
     }
     if(m_startNew){
         m_current=QStringLiteral("0");
@@ -143,6 +177,7 @@ void MainWindow::clearAll(){
     m_current.clear();
     m_lhs=0.0;
     m_op.clear();
+    m_expr.clear();
     m_startNew=true;
     m_error=false;
     updateDisplay();
@@ -164,6 +199,9 @@ void MainWindow::setOperator(const QString &op){
     if(m_error){
         return;
     }
+    if(m_op.isEmpty())
+        m_expr.clear();
+    m_expr+=displayText()+QLatin1Char(' ')+symbolOf(op)+QLatin1Char(' ');
     if(!m_op.isEmpty()&&!m_startNew){
         if(!applyPending(currentValue()))
             return;
@@ -207,12 +245,33 @@ void MainWindow::evaluate(){
 
     const double rhs=m_startNew?m_lhs:currentValue();
 
+    m_expr+=displayText()+QLatin1String(" =");
+
     if(!applyPending(rhs)){
         return;
     }
 
     m_op.clear();
     m_startNew=true;
+    updateDisplay();
+}
+
+//处理正负号输入
+void MainWindow::toggleSign(){
+    if(m_error){
+        return;
+    }
+    if(m_current.isEmpty()||m_current==QLatin1String("0")){
+        m_current=QStringLiteral("-0");
+        m_startNew=false;
+        updateDisplay();
+        return;
+    }
+
+    if(m_current.startsWith(QLatin1Char('-')))
+        m_current.remove(0,1);
+    else
+        m_current.prepend(QLatin1Char('-'));
     updateDisplay();
 }
 

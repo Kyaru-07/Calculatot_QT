@@ -38,9 +38,15 @@ private:
     double currentValue() const;
     QString formatNumber(double value) const;
 
+    QString displayText() const;
+    QString symbolOf(const QString &op) const;
+
     void updateDisplay();
 
+    void toggleSign();
+
     QString m_current;
+    QString m_expr;
     double m_lhs=0.0;
     QString m_op;
     bool m_startNew=true;
