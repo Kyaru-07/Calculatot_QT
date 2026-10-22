@@ -201,7 +201,6 @@ void MainWindow::setOperator(const QString &op){
     }
     if(m_op.isEmpty())
         m_expr.clear();
-    m_expr+=displayText()+QLatin1Char(' ')+symbolOf(op)+QLatin1Char(' ');
     if(!m_op.isEmpty()&&!m_startNew){
         if(!applyPending(currentValue()))
             return;
@@ -210,6 +209,7 @@ void MainWindow::setOperator(const QString &op){
     }
     m_op=op;
     m_startNew=true;
+    m_expr=formatNumber(m_lhs)+QLatin1Char(' ')+symbolOf(op)+QLatin1Char(' ');
     updateDisplay();
 }
 
